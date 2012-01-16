@@ -12,8 +12,7 @@
 
 (qt:connect
  action "triggered()"
- (qt:receiver
-  (lambda ()
+ (lambda ()
     (let ((code (qt:selection e)))
       (qt:insert e code)
       (qt:insert
@@ -24,7 +23,7 @@
 	       (begin
 		 (print-error-message ex)
 		 (print-call-chain))
-	     (pp (eval (with-input-from-string code read)))))))))))
+	     (pp (eval (with-input-from-string code read))))))))))
 
 (qt:add-action e action)
 
