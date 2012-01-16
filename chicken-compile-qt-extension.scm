@@ -5,15 +5,24 @@
 
 (import scheme chicken)
 
-(use files utils setup-api srfi-1 extras data-structures)
+(use files utils setup-api srfi-1 extras data-structures posix)
+
+(define (quit fstr . args)
+  (flush-output)
+  (fprintf (current-error-port) "~?~%" fstr args)
+  (exit 1))
 
 (define QTDIR
   (or (get-environment-variable "QTDIR")
-      (error "please set the QTDIR environment variable") ) )
+      (and (file-execute-access? "/usr/bin/qmake") "/usr")
+      (and (file-execute-access? "/usr/local/bin/qmake") "/usr/local")
+      (quit "please set the QTDIR environment variable") ) )
 
-(define prefix (installation-prefix))
+(define prefix chicken-prefix)
 (define libpath (make-pathname prefix "lib"))
 (define incpath (make-pathname prefix "include"))
+;; need both -I<incdir> (pre 4.6.4) and -i<incdir>/chicken (4.6.4)
+(define cincpath (make-pathname incpath "chicken"))
 (define binpath (make-pathname prefix "bin"))
 (define csc (make-pathname binpath "csc"))
 (define keepfiles #f)
@@ -70,7 +79,8 @@
       (lambda ()
 	(let ((csc (qs (normalize-pathname csc)))
 	      (libdir (qs (normalize-pathname libpath)))
-	      (incdir (qs (normalize-pathname incpath))))
+	      (incdir (qs (normalize-pathname incpath)))
+	      (cincdir (qs (normalize-pathname cincpath))))
 	  (print #<#EOF
 SOURCES=#{(string-intersperse cppfiles)}
 CONFIG+=uitools qt
@@ -78,33 +88,28 @@ TEMPLATE=lib
 HEADERS=#{(string-intersperse hfiles)}
 TARGET=#{name}
 unix:QMAKE_LFLAGS_RELEASE+= `#{csc} -libs -ldflags` -L#{libdir}
-unix:QMAKE_CFLAGS_RELEASE+=-w `#{csc} -cflags` -I#{incdir}
-unix:QMAKE_CXXFLAGS_RELEASE+=-w `#{csc} -cflags` -I#{incdir}
+unix:QMAKE_CFLAGS_RELEASE+=-w `#{csc} -cflags` -I#{incdir} -I#{cincdir}
+unix:QMAKE_CXXFLAGS_RELEASE+=-w `#{csc} -cflags` -I#{incdir} -I#{cincdir}
+unix:QMAKE_CFLAGS_WARN_ON=-w
+unix:QMAKE_CXXFLAGS_WARN_ON=-w
 win32:QMAKE_LFLAGS_RELEASE+=-L#{libdir}
-win32:QMAKE_CFLAGS_RELEASE+=-w -I#{incdir} -DHAVE_CHICKEN_CONFIG_H -DPIC
-win32:QMAKE_CXXFLAGS_RELEASE+=-w -I#{incdir} -DHAVE_CHICKEN_CONFIG_H -DPIC
+win32:QMAKE_CFLAGS_RELEASE+=-w -I#{incdir} -I#{cincdir} -DHAVE_CHICKEN_CONFIG_H -DPIC
+win32:QMAKE_CXXFLAGS_RELEASE+=-w -I#{incdir} -I#{cincdir} -DHAVE_CHICKEN_CONFIG_H -DPIC
+win32:QMAKE_CFLAGS_WARN_ON=--w
+win32:QMAKE_CXXFLAGS_WARN_ON=-w
 win32:LIBS+=-lchicken -lm -lws2_32
-QT+=opengl
+QT+=opengl dbus network
 EOF
 ) ) ))
     (run (,qmake ,(qs pro) -o ,mkfile))
     (delete-file* output)
-    (run (,gmake -f ,mkfile clean release))
+    (run (,gmake -f ,mkfile clean ,(if mingw32 "release" "all")))
     (cp
      (make-pathname 
-      "release" 
+      (if mingw32 "release" #f)
       (if mingw32 name (string-append "lib" name))
       (if mingw32 "dll" "so.1.0.0"))
      output)
-    (unless keepfiles
-      (when (setup-verbose-mode) (print "  rm -fr debug release"))
-      (remove-directory "debug") 
-      (remove-directory "release")
-      (rm-f 
-       mkfile
-       (pathname-replace-extension mkfile "Debug")
-       (pathname-replace-extension mkfile "Release")
-       pro))
     ) )
 
 (define (rm-f . files)
@@ -118,11 +123,6 @@ EOF
   (when (setup-verbose-mode)
     (print "  cp " (qs from) " " (qs to))
     (file-copy from to)))
-
-(define (quit fstr . args)
-  (flush-output)
-  (fprintf (current-error-port) "~?~%" fstr args)
-  (exit 1))
 
 (define (main args)
   (let-values (((opts files) (filter-options args)))

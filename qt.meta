@@ -7,5 +7,5 @@
  (doc-from-wiki)
  (maintainer "Andrei Barbu")
  (author "felix winkelmann and Andrei Barbu")
- (files "qt.release-info" "qt.setup" "main.cpp" "examples/hello.scm" "examples/egg-browser.scm" "examples/test.ui" "examples/test.scm" "examples/hello.ui" "examples/editor.ui" "examples/lisp-lizard.png" "examples/lisp1pz.png" "examples/egg-browser.ui" "examples/edit.scm" "qt.meta" "prototypes.h" "qt-base.scm" "chicken-compile-qt-extension.scm"))
+ (files "qt.release-info" "qt.setup" "main.cpp" "tests.scm" "examples/hello.scm" "examples/egg-browser.scm" "examples/test.ui" "examples/test.scm" "examples/hello.ui" "examples/editor.ui" "examples/lisp-lizard.png" "examples/lisp1pz.png" "examples/egg-browser.ui" "examples/edit.scm" "qt.meta" "prototypes.h" "qt.scm" "chicken-compile-qt-extension.scm"))
 

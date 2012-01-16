@@ -110,17 +110,16 @@ EOF
 (define f #f)
 (define s (qt:sound "blip.wav"))
 (pp s)
-(define r (qt:receiver (lambda () 
+(define r (lambda () 
 			 (qt:message "Oink!")
 			 (set! (qt:property cb "checked") f)
-			 (set! f (not f)) ) ) )
-(qt:connect (ensure identity (qt:find w "pushButton_2")) "clicked()" (qt:receiver (lambda () (print "exit") (exit))))
+			 (set! f (not f)) ) )
+(qt:connect (ensure identity (qt:find w "pushButton_2")) "clicked()" (lambda () (print "exit") (exit)))
 (qt:connect (ensure identity (qt:find w "pushButton")) "clicked()" 
-	    (qt:receiver 
-	     (lambda ()
+	    (lambda ()
 	       (qt:play s)
-	       (pp (qt:get-open-filename "yo" ".")))))
-(qt:connect app "aboutToQuit()" (qt:receiver (lambda () (print "about to quit"))))
+	       (pp (qt:get-open-filename "yo" "."))))
+(qt:connect app "aboutToQuit()" (lambda () (print "about to quit")))
 (when i (set! (qt:property (qt:find w "label") "pixmap") i))
 
 (define a 0)
@@ -152,16 +151,15 @@ EOF
 (qt:show w)
 (qt:show g)
 
-(qt:connect app "lastWindowClosed()" (qt:receiver (lambda () (print "closed") (exit))))
+(qt:connect app "lastWindowClosed()" (lambda () (print "closed") (exit)))
 
 (define t (qt:timer 0.01))
 
 (qt:connect
  t "timeout()"
- (qt:receiver
-  (lambda ()
+ (lambda ()
     (set! a (+ a 0.3))
-    (qt:update g) ) ) )
+    (qt:update g) ) )
 
 (qt:start t)
 

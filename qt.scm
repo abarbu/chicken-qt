@@ -1,4 +1,4 @@
-;;;; qt-base.scm
+;;;; qt.scm
 
 
 (module qt (qt:init

@@ -1,80 +1,22 @@
 ;;;; qt.setup -*- Scheme -*-
 
 
-(use files utils)
+(parameterize ((command-line-arguments
+		'("-O3" "-d1" "-X" "easyffi" "-j" "qt" "qt.scm" "main.cpp"
+		  "-o" "qt.so" "-k" "-v") ) )
+  (load "chicken-compile-qt-extension.scm"))
 
-
-(define QTDIR
-  (or
-   (if (version>=? (chicken-version) "4.6.7")
-       (get-environment-variable "QTDIR")
-       (getenv "QTDIR"))
-   (error "please set the QTDIR environment variable") ) )
-
-(define prefix (program-path))
-(define libpath (make-pathname prefix "lib"))
-(define incpath (make-pathname prefix "include"))
-(define binpath (make-pathname prefix "bin"))
-;; Note that binpath points to the wrong location on my system
-(define csc (make-pathname "/usr/bin/" ;; binpath
-			   "csc"))
-
-(with-output-to-file "qt.pro"
-  (lambda ()
-    (let ((csc (qs (normalize-pathname csc)))
-	  (libdir (qs (normalize-pathname libpath)))
-	  (incdir (qs (normalize-pathname incpath))))
-      (print #<#EOF
-SOURCES=main.cpp qt-base.cpp
-HEADERS=prototypes.h
-CONFIG+=uitools qt debug
-TEMPLATE=lib
-TARGET=qtb
-win32:LIBS+=-lchicken -lm -lws2_32
-QT+=dbus opengl network
-EOF
-))))
-
-(with-output-to-file ".qmake.cache"
-  (lambda ()
-    (let ((csc (qs (normalize-pathname csc)))
-	  (libdir (qs (normalize-pathname libpath)))
-	  (incdir (qs (normalize-pathname incpath))))
-      (print #<#EOF
-unix {
-      QMAKE_CFLAGS_WARN_ON=-Wall -Werror -Wno-unused -Wno-write-strings
-      QMAKE_CXXFLAGS_WARN_ON=-Wall -Werror -Wno-unused -Wno-write-strings
-      QMAKE_CFLAGS+=-Wno-unused `#{csc} -cflags` -I#{incdir}
-      QMAKE_CXXFLAGS+=-Wno-unused `#{csc} -cflags` -I#{incdir}
-      QMAKE_LFLAGS+=`/usr/bin/csc -libs -ldflags` -L#{libdir}
-}
-
-win32 {
-	QMAKE_CFLAGS_WARN_ON=-Wall -Werror -Wno-unused -Wno-write-strings
-	QMAKE_CXXFLAGS_WARN_ON=-Wall -Werror -Wno-unused -Wno-write-strings
-	QMAKE_LFLAGS+=-L#{libdir}
-	QMAKE_CFLAGS+=-Wno-unused -I#{incdir} -DHAVE_CHICKEN_CONFIG_H -DPIC
-	QMAKE_CXXFLAGS+=-Wno-unused -I#{incdir} -DHAVE_CHICKEN_CONFIG_H -DPIC
-}
-EOF
-))))
-
-(make (("Makefile" ("qt.pro")
-	(run (,(normalize-pathname
-		(make-pathname QTDIR "bin/qmake"))
-	      qt.pro)))
-       ("qt.so" ("prototypes.h" "main.cpp" "qt-base.cpp" "Makefile")
-	(run (,(cond-expand (mingw32 "mingw32-make") (else "make")) clean all))
-	(run (,(cond-expand
-		(mingw32 "copy /Y debug\\qtb.dll qt.so")
-		(else "cp libqtb.so.1.0.0 qt.so")))))
-       ("qt.import.so" ("qt-base.cpp")
-	(compile -s -O3 -d0 qt.import.scm))
-       ("qt-base.cpp" ("qt-base.scm" "prototypes.h")
-	(compile -c++ -t qt-base.scm -optimize-level 0 -d2 -X easyffi -C -g -j qt)))
- '("qt.so" "qt.import.so"))
+(compile -s -O3 -d0 qt.import.scm)
 
 (install-extension
  'qt
  `("qt.so" "qt.import.so")
- '((version 0.100.2)))
+ '((version 0.100.3)))
+
+(compile -O3 -d0 -b chicken-compile-qt-extension.scm)
+
+(install-program
+ 'chicken-compile-qt-extension
+ '("chicken-compile-qt-extension")
+ '((version 0.98)))
+
