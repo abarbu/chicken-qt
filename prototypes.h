@@ -46,10 +46,6 @@ qtwidget qt_gl(char *name, qtwidget parent, C_word proc);
 void qt_update(qtwidget w);
 qttimer qt_make_timer(double secs);
 void qt_destroy_timer(qttimer timer);
-void qt_start(qttimer t);
-void qt_stoptimer(qttimer t);
-void qt_stopsound(qtsound t);
-void qt_play(qtsound t);
 qtsound qt_sound(char *filename);
 void qt_clearlistwidget(qtwidget w);
 void qt_addcomboboxitem(qtwidget w, char *s);
@@ -113,3 +109,7 @@ int qt_http_get(qthttp h, char *url);
 // TODO this should return ___byte_vector but easyffi complains
 char *qt_http_read_bytes(qthttp h);
 char *qt_http_read_string(qthttp h);
+void qt_webview_set_html(qtwidget w, char *html);
+char *qt_textedit_to_html(qtwidget w);
+char *qt_textedit_to_plain_text(qtwidget w);
+char *qt_lineedit_text(qtwidget w);

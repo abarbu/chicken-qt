@@ -6,6 +6,7 @@
 #include <QtCore>
 #include <QtDBus>
 #include <QHttp>
+#include <QtWebKit>
 #include <chicken.h>
 #include <assert.h>
 
@@ -299,7 +300,7 @@ void qt_c_dbus_list_names(QDBusConnection *bus, QVariantList* l)
 {
   QStringList serviceNames = bus->interface()->registeredServiceNames();
   for(int i = 0; i < serviceNames.length(); ++i)
-    *l << *(new QString(serviceNames.at(i)));
+    *l << QString(serviceNames.at(i));
 }
 ___bool qt_c_dbus_send_signal(QDBusConnection *bus, char *object,
 			    char *interface, char *signal, QVariantList* l)
@@ -338,7 +339,6 @@ ___bool qt_dbus_method_call_with_callback(QDBusConnection *bus, char *service, c
   msg.setArguments(*l);
   return bus->callWithCallback(msg, obj, slot);
 }
-
 
 ___bool qt_dbus_register_service(QDBusConnection *bus, char *service)
 { return bus->interface()->registerService(service); }
@@ -472,7 +472,9 @@ static char *qstrdata(const QString &str)
   default: ptr = str.toAscii().data(); break;
   }
 
-  memcpy(strbuf, ptr, len + 1);
+  QByteArray barray = str.toAscii();
+  for(int i = 0; i < len; ++i) strbuf[i] = barray.at(i);
+  strbuf[len] = 0;
   return strbuf;
 }
 
@@ -484,7 +486,6 @@ int qstrdata_size(const QString &str)
   case 2: arr = str.toUtf8(); break;
   default: arr = str.toAscii(); break;
   }
-
   return arr.size();
 }
 
@@ -498,7 +499,6 @@ int qchrdata(const QChar chr)
   }
 }
 
-
 qtpixmap qt_pixmap(char *filename)
 {
   QPixmap *px = new QPixmap(filename);
@@ -511,12 +511,10 @@ qtpixmap qt_pixmap(char *filename)
   return px;
 }
 
-
 int qt_message(char *caption, char *text, QWidget *parent, char *b0, char *b1, char *b2)
 {
   return QMessageBox::information(parent, caption, text, b0, b1, b2);
 }
-
 
 #define propsetter(name, type)						\
   ___bool qt_set ## name ## property(QWidget *w, char *prop, type val)	\
@@ -527,13 +525,11 @@ int qt_message(char *caption, char *text, QWidget *parent, char *b0, char *b1, c
     else return mo->property(i).write(w, val);				\
   }
 
-
 propsetter(string, char *)
 propsetter(bool, ___bool)
 propsetter(int, int)
 propsetter(float, double)
 propsetter(char, char)
-
 
 ___bool qt_setpixmapproperty(QWidget *w, char *prop, qtpixmap val)
 {
@@ -542,7 +538,6 @@ ___bool qt_setpixmapproperty(QWidget *w, char *prop, qtpixmap val)
   if(i == -1) return 0;
   else return mo->property(i).write(w, *val);
 }
-
 
 ___bool qt_setpointproperty(QWidget *w, char *prop, int *val)
 {
@@ -558,7 +553,6 @@ ___bool qt_setpointproperty(QWidget *w, char *prop, int *val)
   }
 }
 
-
 ___bool qt_setpointfproperty(QWidget *w, char *prop, double *val)
 {
   const QMetaObject *mo = w->metaObject();
@@ -573,7 +567,6 @@ ___bool qt_setpointfproperty(QWidget *w, char *prop, double *val)
   }
 }
 
-
 ___bool qt_setrectproperty(QWidget *w, char *prop, int *val)
 {
   const QMetaObject *mo = w->metaObject();
@@ -581,7 +574,6 @@ ___bool qt_setrectproperty(QWidget *w, char *prop, int *val)
   if(i == -1) return 0;
   else return mo->property(i).write(w, QRect(val[ 0 ], val[ 1 ], val[ 2 ], val[ 3 ]));
 }
-
 
 ___bool qt_setrectfproperty(QWidget *w, char *prop, double *val)
 {
@@ -591,14 +583,12 @@ ___bool qt_setrectfproperty(QWidget *w, char *prop, double *val)
   else return mo->property(i).write(w, QRectF(val[ 0 ], val[ 1 ], val[ 2 ], val[ 3 ]));
 }
 
-
 char *qt_getstringproperty(QWidget *w, char *prop)
 {
   const QMetaObject *mo = w->metaObject();
   int i = mo->indexOfProperty(prop);
   return qstrdata(mo->property(i).read(w).toString());
 }
-
 
 int qt_getcharproperty(QWidget *w, char *prop)
 {
@@ -607,14 +597,12 @@ int qt_getcharproperty(QWidget *w, char *prop)
   return qchrdata(mo->property(i).read(w).toChar());
 }
 
-
 int qt_getintproperty(QWidget *w, char *prop)
 {
   const QMetaObject *mo = w->metaObject();
   int i = mo->indexOfProperty(prop);
   return mo->property(i).read(w).toInt();
 }
-
 
 double qt_getfloatproperty(QWidget *w, char *prop)
 {
@@ -623,7 +611,6 @@ double qt_getfloatproperty(QWidget *w, char *prop)
   return mo->property(i).read(w).toDouble();
 }
 
-
 ___bool qt_getboolproperty(QWidget *w, char *prop)
 {
   const QMetaObject *mo = w->metaObject();
@@ -631,14 +618,12 @@ ___bool qt_getboolproperty(QWidget *w, char *prop)
   return mo->property(i).read(w).toBool();
 }
 
-
 qtpixmap qt_getpixmapproperty(QWidget *w, char *prop)
 {
   const QMetaObject *mo = w->metaObject();
   int i = mo->indexOfProperty(prop);
   return new QPixmap(mo->property(i).read(w).value<QPixmap>());
 }
-
 
 C_word qt_getpointfproperty(QWidget *w, char *prop, C_word pt)
 {
@@ -650,7 +635,6 @@ C_word qt_getpointfproperty(QWidget *w, char *prop, C_word pt)
   return pt;
 }
 
-
 C_word qt_getpointproperty(QWidget *w, char *prop, C_word pt)
 {
   const QMetaObject *mo = w->metaObject();
@@ -660,7 +644,6 @@ C_word qt_getpointproperty(QWidget *w, char *prop, C_word pt)
   ((int *)C_data_pointer(C_block_item(pt, 1)))[ 1 ] = qpt.y();
   return pt;
 }
-
 
 C_word qt_getrectfproperty(QWidget *w, char *prop, C_word pt)
 {
@@ -674,7 +657,6 @@ C_word qt_getrectfproperty(QWidget *w, char *prop, C_word pt)
   return pt;
 }
 
-
 C_word qt_getrectproperty(QWidget *w, char *prop, C_word pt)
 {
   const QMetaObject *mo = w->metaObject();
@@ -687,7 +669,6 @@ C_word qt_getrectproperty(QWidget *w, char *prop, C_word pt)
   return pt;
 }
 
-
 C_word qt_getsizefproperty(QWidget *w, char *prop, C_word pt)
 {
   const QMetaObject *mo = w->metaObject();
@@ -698,7 +679,6 @@ C_word qt_getsizefproperty(QWidget *w, char *prop, C_word pt)
   return pt;
 }
 
-
 C_word qt_getsizeproperty(QWidget *w, char *prop, C_word pt)
 {
   const QMetaObject *mo = w->metaObject();
@@ -708,7 +688,6 @@ C_word qt_getsizeproperty(QWidget *w, char *prop, C_word pt)
   ((int *)C_data_pointer(C_block_item(pt, 1)))[ 1 ] = qpt.height();
   return pt;
 }
-
 
 int qt_propertytype(qtwidget w, char *prop)
 {
@@ -751,9 +730,6 @@ qttimer qt_make_timer(double secs)
 
 void qt_destroy_timer(qttimer timer) { delete timer; }
 
-void qt_start(qttimer t) { t->start(); }
-void qt_stoptimer(qttimer t) { t->stop(); }
-void qt_stopsound(qtsound t) { t->stop(); }
 void qt_clearlistwidget(qtwidget w) { ((QListWidget *)w)->clear(); }
 void qt_addcomboboxitem(qtwidget w, char *s) { ((QComboBox *)w)->addItem(s); }
 void qt_addlistwidgetitem(qtwidget w, char *s) { ((QListWidget *)w)->addItem(s); }
@@ -769,29 +745,23 @@ char *qt_listwidgetitem(qtwidget w, int i) {
 }
 
 qtsound qt_sound(char *filename) { return new QSound(filename); }
-void qt_play(qtsound s) { s->play(); }
-
 
 char *qt_getexistingdirectory(qtwidget p, char *cap, char *dir, int opts)
 {
   return qstrdata(QFileDialog::getExistingDirectory(p, cap, dir, (QFileDialog::Option)opts));
 }
 
-
 char *qt_getopenfilename(qtwidget p, char *cap, char *dir, char *filter, int opts)
 {
   return qstrdata(QFileDialog::getOpenFileName(p, cap, dir, filter, 0, (QFileDialog::Options)opts));
 }
-
 
 char *qt_getsavefilename(qtwidget p, char *cap, char *dir, char *filter, int opts)
 {
   return qstrdata(QFileDialog::getSaveFileName(p, cap, dir, filter, 0, (QFileDialog::Options)opts));
 }
 
-
 void qt_setheaders(qtwidget w, char *s) { ((QTreeWidget *)w)->setHeaderLabels(QString(s).split("|")); }
-
 
 char *qt_selection(qttextedit t)
 {
@@ -800,14 +770,12 @@ char *qt_selection(qttextedit t)
   return qstrdata(txt);
 }
 
-
 void qt_insert(qttextedit t, char *s)
 {
   QTextEdit *te = (QTextEdit *)t;
   QTextCursor c = te->textCursor();
   c.insertText(s);
 }
-
 
 qtaction qt_shortcut(qtwidget w, char *key)
 {
@@ -816,10 +784,8 @@ qtaction qt_shortcut(qtwidget w, char *key)
   return a;
 }
 
-
 void qt_add_action(qtwidget w, qtaction a) { ((QWidget *)w)->addAction((QAction *)a); }
 void qt_remove_action(qtwidget w, qtaction a) { ((QWidget *)w)->removeAction((QAction *)a); }
-
 
 int qt_charencoding(int mode)
 {
@@ -856,3 +822,19 @@ int qt_http_get(QHttp *h, char *url) { return h->get(QUrl(url).toEncoded()); }
 // blob version
 char *qt_http_read_bytes(QHttp *h) { return h->readAll().data(); }
 char *qt_http_read_string(QHttp *h) { return qstrdata(QString(h->readAll().data())); }
+
+void qt_webview_set_html(qtwidget w, char *html) {
+  ((QWebView*)w)->setHtml(QString(html));
+}
+
+char *qt_textedit_to_html(qtwidget w) {
+  return qstrdata(((QTextEdit*)w)->toHtml());
+}
+
+char *qt_textedit_to_plain_text(qtwidget w) {
+  return qstrdata(((QTextEdit*)w)->toPlainText());
+}
+
+char *qt_lineedit_text(qtwidget w) {
+  return qstrdata(((QLineEdit*)w)->text());
+}

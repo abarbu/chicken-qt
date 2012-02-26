@@ -182,8 +182,7 @@
 					     "ping()"))
     (run-for-a-bit)
     (test 15.2 pinged)
-    (test-assert "Unregister" (qt:dbus-unregister-service bus "Chicken.Test"))
-    ))))
+    (test-assert "Unregister" (qt:dbus-unregister-service bus "Chicken.Test"))))))
 
 (test-group
  "HTTP"

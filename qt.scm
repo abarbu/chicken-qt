@@ -5,17 +5,14 @@
 	    qt:widget qt:show qt:hide qt:run
 	    qt:delete qt:message qt:connect qt:find
 	    qt:widget qt:pixmap qt:timer qt:destroy-timer
-	    qt:property qt:gl qt:update qt:start qt:stop
+	    qt:property qt:gl qt:update
 	    qt:clear qt:add qt:item <qt> qt:classname
 	    <qt-object> <qt-widget> <qt-pixmap> <qt-application>
 	    <qt-timer> <qt-sound> <qt-text-edit>
 	    <qt-action>
 	    qt:get-open-filename qt:get-save-filename qt:get-directory
-	    qt:sound qt:play qt:set-headers
-	    qt:selection qt:insert
-	    qt:shortcut
-	    qt:add-action qt:remove-action
-	    qt:char-encoding
+	    qt:sound qt:set-headers qt:selection qt:insert qt:shortcut
+	    qt:add-action qt:remove-action qt:char-encoding
 	    qt:add-attribute qt:remove-attribute qt:attribute?
 	    qt:window-flags qt:set-window-flags qt:desktop
 	    qt:make-variant-list
@@ -36,7 +33,8 @@
 	    qt:pointer->sound qt:pointer->text-edit
 	    qt:pointer->action qt:pointer->variant-list
 	    qt:pointer->dbus-connection qt:pointer->http
-	    )
+	    qt:webview-set-html qt:textedit->html 
+	    qt:textedit->plain-text qt:lineedit-text)
 
 (import scheme chicken
 	(except foreign foreign-declare)
@@ -102,6 +100,7 @@ ___declare(type, "qthttp;(c-pointer \"QHttp\");qt:->pointer;qt:pointer->http")
 #include <QtCore>
 #include <QtDBus>
 #include <QHttp>
+#include <QtWebKit>
 #include <chicken.h>
 #include <assert.h>
 <#
@@ -337,14 +336,20 @@ ___declare(type, "qthttp;(c-pointer \"QHttp\");qt:->pointer;qt:pointer->http")
   (qt:getexistingdirectory parent cap dir (file-dialog-options 'qt:get-directory options)) )
 
 (! <qt-timer> 'stop
-   (lambda (self) (qt:stoptimer self)))
+   (lambda (self) (qt:invoke-method self "stop()" #f)))
 
 (! <qt-sound> 'stop
-   (lambda (self) (qt:stopsound self)))
+   (lambda (self) (qt:invoke-method self "stop()" #f)))
 
 (define (qt:stop x) (@ x stop))
 
 (define (qt:add-attribute w a) (qt:attribute w a 1))
 (define (qt:remove-attribute w a) (qt:attribute w a 0))
 (define (qt:attribute? w a) (= (qt:testattribute w a) 1))
+
+(define (qt:textedit->html w) (qt:textedit-to-html w))
+(define (qt:textedit->plain-text w) (qt:textedit-to-plain-text w))
 )
+
+
+

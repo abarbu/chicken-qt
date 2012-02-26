@@ -3,7 +3,7 @@
 ((synopsis "A basic Qt 4 interface")
  (category ui)
  (license "BSD")
- (depends easyffi protobj matchable miscmacros)
+ (depends easyffi protobj matchable miscmacros test)
  (doc-from-wiki)
  (maintainer "Andrei Barbu")
  (author "felix winkelmann and Andrei Barbu")

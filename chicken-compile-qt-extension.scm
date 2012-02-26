@@ -98,7 +98,7 @@ win32:QMAKE_CXXFLAGS_RELEASE+=-w -I#{incdir} -I#{cincdir} -DHAVE_CHICKEN_CONFIG_
 win32:QMAKE_CFLAGS_WARN_ON=--w
 win32:QMAKE_CXXFLAGS_WARN_ON=-w
 win32:LIBS+=-lchicken -lm -lws2_32
-QT+=opengl dbus network
+QT+=opengl dbus network webkit
 EOF
 ) ) ))
     (run (,qmake ,(qs pro) -o ,mkfile))
